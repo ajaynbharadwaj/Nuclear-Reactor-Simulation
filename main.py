@@ -10,19 +10,17 @@ from globals import *
 
 pygame.init()
 ctypes.windll.user32.SetProcessDPIAware()
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.FULLSCREEN)
-pygame.display.set_caption("Simulation")
+#screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.FULLSCREEN)
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+pygame.display.set_caption("Reactor Simulation")
 clock = pygame.time.Clock()
 font = pygame.font.SysFont(None, 48)
 
 def controlRodInit():
     controlRods = pygame.sprite.Group()
     for i in range(ROD_NUMBER): 
-        #x = 360 + i * (8 * ATOM_RADIUS + 4 * ATOM_DIST)
         x = 510 + i * (10 * ATOM_RADIUS + 5 * ATOM_DIST) 
-        print(x)
         controlRods.add(ControlRod(x, ROD_WIDTH, SCREEN_HEIGHT))
-
     return controlRods
 
 def atomWaterInit(ATOM_GRID_SIZE):
@@ -57,15 +55,12 @@ def neutronUpdate():
 
 def controlRodUpdate():
     for controlRod in controlRods:
-        if len(neutrons) < DESIRED_NEUTRONS:
+        if len(neutrons) < (DESIRED_NEUTRONS + NEUTRON_TH):
             controlRod.move(True)
-        else:
+        elif len(neutrons) > (DESIRED_NEUTRONS + NEUTRON_TH):
             controlRod.move(False)
         screen.blit(controlRod.image, controlRod.rect)
-        
-
-
-
+    return        
 
 def atomUpdate():
     for atom in atoms:
@@ -74,7 +69,7 @@ def atomUpdate():
             if random.random() < P_DECAY:
                 createNeutrons(atom.x, atom.y, 1)
 
-            if random.random() < P_URANIUM:
+            if random.random() < P_URANIUM and atom.element == 0:
                 atom.refill()
 
         screen.blit(atom.image, atom.rect.topleft)
@@ -86,14 +81,14 @@ def waterUpdate():
     water.draw(screen)    
     return
 
-def handle_collisions():
+def atomNeutronCollisions():
     collided_neutrons = pygame.sprite.groupcollide(neutrons, atoms, False, False)
     for neutron, atom_list in collided_neutrons.items():
         for atom in atom_list:
-            if atom.hit(neutron):
+            if atom.hit(neutron) == 1:
                 createNeutrons(atom.x, atom.y, 3)
 
-def check_neutron_water_collisions():
+def waterNeutronCollisions():
     for block in water:
         collided_neutrons = pygame.sprite.spritecollide(block, neutrons, False)
         if collided_neutrons:
@@ -106,7 +101,7 @@ def check_neutron_water_collisions():
             block.temp -= TEMP_REDUCTION
     return
 
-def rod_neutron_collions():
+def rodNeutronCollisions():
     for neutron in neutrons:
         collided_rods = pygame.sprite.spritecollide(neutron, controlRods, False)
         if collided_rods:
@@ -135,16 +130,17 @@ def main():
 
         waterUpdate()
         atomUpdate()
-        handle_collisions()
         neutronUpdate()
         controlRodUpdate()
-        check_neutron_water_collisions()
-        rod_neutron_collions()
+        atomNeutronCollisions()
+        waterNeutronCollisions()
+        rodNeutronCollisions()
 
 
-        """current_fps = int(clock.get_fps())
-        fps_text = font.render(f"FPS: {current_fps}", True, (255, 0, 0))
-        screen.blit(fps_text, (10, 10))"""
+
+        current_fps = int(clock.get_fps())
+        fps_text = font.render(f"FPS: {current_fps}", True, (0, 0, 0))
+        screen.blit(fps_text, (10, 10))
 
         neutrino_count = len(neutrons)
         count_text = font.render(f"Neutrons: {neutrino_count}", True, (0, 0, 0))

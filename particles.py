@@ -1,5 +1,6 @@
 import numpy as np
 import pygame
+import random
 
 from globals import *
 
@@ -13,11 +14,14 @@ class Atom(pygame.sprite.Sprite):
         self.element = element
         self.x = x
         self.y = y
+        self.source = (x,y)
 
-        if self.element:
-            self.color = (50,100,200)
-        else:
+        if self.element == 0:
             self.color = (150,150,150)
+        elif self.element == 1:
+            self.color = (50,100,200)
+        elif self.element == 2:
+            self.color = (50,50,50)
 
         self.draw()
         return
@@ -27,19 +31,28 @@ class Atom(pygame.sprite.Sprite):
         return
     
     def refill(self):
-        self.element = True
+        self.element = 1
         self.color = (50,100,200)
         self.draw()
         return
 
     def hit(self, neutrino):
-        if self.element:
-            self.color = (150,150,150)
-            self.element = False
+        if self.element == 1:
+            if random.random() < P_XENON:
+                self.element = 2
+                self.color = (50,50,50)
+            else:
+                self.element = 0
+                self.color = (150,150,150)
             neutrino.kill()
             self.draw()
             return True
-
+        elif self.element == 2 and neutrino.source != self.source:
+            self.color = (150,150,150)
+            self.element = 0
+            neutrino.kill()
+            self.draw()
+            return False
         else:
             return False
 
@@ -53,6 +66,7 @@ class Neutron(pygame.sprite.Sprite):
         self.angle = angle
         self.velocity = velocity
         self.color = NEUTRON_COLOR
+        self.source = (x,y)
 
         self.draw()
         return
