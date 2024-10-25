@@ -5,7 +5,7 @@ import ctypes
 import random
 
 from particles import Atom, Neutron, Water
-from rods import ControlRod
+from rods import ControlRod, Moderator
 from globals import *
 
 pygame.init()
@@ -22,6 +22,13 @@ def controlRodInit():
         x = 510 + i * (10 * ATOM_RADIUS + 5 * ATOM_DIST) 
         controlRods.add(ControlRod(x, ROD_WIDTH, SCREEN_HEIGHT))
     return controlRods
+
+def modderatorInit():
+    moderators = pygame.sprite.Group()
+    for i in range(MODERATOR_NUMBER): 
+        x = 360 + i * (10 * ATOM_RADIUS + 5 * ATOM_DIST) 
+        moderators.add(Moderator(x, ROD_WIDTH, SCREEN_HEIGHT))
+    return moderators
 
 def atomWaterInit(ATOM_GRID_SIZE):
     grid_width = ATOM_GRID_SIZE[1] * (2 * ATOM_RADIUS + ATOM_DIST) - ATOM_DIST
@@ -62,12 +69,17 @@ def controlRodUpdate():
         screen.blit(controlRod.image, controlRod.rect)
     return        
 
+def moderatorUpdate():
+    for moderator in moderators:
+        screen.blit(moderator.image, moderator.rect)
+    return
+
 def atomUpdate():
     for atom in atoms:
 
         if atom.element == False:
             if random.random() < P_DECAY:
-                createNeutrons(atom.x, atom.y, 1)
+                createNeutrons(atom.x, atom.y, 1, 1)
 
             if random.random() < P_URANIUM and atom.element == 0:
                 atom.refill()
@@ -86,7 +98,7 @@ def atomNeutronCollisions():
     for neutron, atom_list in collided_neutrons.items():
         for atom in atom_list:
             if atom.hit(neutron) == 1:
-                createNeutrons(atom.x, atom.y, 3)
+                createNeutrons(atom.x, atom.y, 3, 0)
 
 def waterNeutronCollisions():
     for block in water:
@@ -107,13 +119,14 @@ def rodNeutronCollisions():
         if collided_rods:
             neutron.kill()
 
-def createNeutrons(x,y,n):
+def createNeutrons(x,y,n, thermal):
     for _ in range(n):
-        neutrons.add(Neutron(x, y, NEUTRON_RADIUS, random.uniform(0,360), NEUTRON_VELOCITY))
+        neutrons.add(Neutron(x, y, NEUTRON_RADIUS, random.uniform(0,360), NEUTRON_VELOCITY, thermal))
 
 atoms, water = atomWaterInit(ATOM_GRID_SIZE)
 neutrons = neutronInit()
 controlRods = controlRodInit()
+moderators = modderatorInit()
 
 def main():
     running = True
@@ -132,6 +145,7 @@ def main():
         atomUpdate()
         neutronUpdate()
         controlRodUpdate()
+        moderatorUpdate()
         atomNeutronCollisions()
         waterNeutronCollisions()
         rodNeutronCollisions()

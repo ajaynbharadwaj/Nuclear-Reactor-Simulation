@@ -26,3 +26,18 @@ class ControlRod(pygame.sprite.Sprite):
             self.rodY -= ROD_VELOCITY
         self.rect = self.image.get_rect(topleft=(self.x, -self.rodY))
         return
+    
+class Moderator(pygame.sprite.Sprite):
+    def __init__(self, x, width, screen_height):
+        super().__init__()
+        self.width = width
+        self.height = 20*ATOM_DIST + 40*ATOM_RADIUS
+        self.x = x
+        self.image = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
+        self.rect = self.image.get_rect(topleft=(x, 205))
+
+        self.draw()
+
+    def draw(self):
+        pygame.draw.rect(self.image, (0, 0, 0), (0, 0, self.width, self.height))
+        pygame.draw.rect(self.image, (255, 255, 255), (2, 2, self.width - 6, self.height - 6))
