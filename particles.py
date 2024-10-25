@@ -36,7 +36,9 @@ class Atom(pygame.sprite.Sprite):
         self.draw()
         return
 
-    def hit(self, neutrino):
+    def hit(self, neutron):
+        if neutron.thermal != 1:
+            return
         if self.element == 1:
             if random.random() < P_XENON:
                 self.element = 2
@@ -44,13 +46,13 @@ class Atom(pygame.sprite.Sprite):
             else:
                 self.element = 0
                 self.color = (150,150,150)
-            neutrino.kill()
+            neutron.kill()
             self.draw()
             return True
-        elif self.element == 2 and neutrino.source != self.source:
+        elif self.element == 2 and neutron.source != self.source:
             self.color = (150,150,150)
             self.element = 0
-            neutrino.kill()
+            neutron.kill()
             self.draw()
             return False
         else:

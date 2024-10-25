@@ -10,24 +10,24 @@ from globals import *
 
 pygame.init()
 ctypes.windll.user32.SetProcessDPIAware()
-#screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.FULLSCREEN)
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.FULLSCREEN)
+#screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Reactor Simulation")
 clock = pygame.time.Clock()
 font = pygame.font.SysFont(None, 48)
 
 def controlRodInit():
     controlRods = pygame.sprite.Group()
-    for i in range(ROD_NUMBER): 
-        x = 510 + i * (10 * ATOM_RADIUS + 5 * ATOM_DIST) 
-        controlRods.add(ControlRod(x, ROD_WIDTH, SCREEN_HEIGHT))
+    for n in range(ROD_NUMBER): 
+        x = 510 + n * (10 * ATOM_RADIUS + 5 * ATOM_DIST) 
+        controlRods.add(ControlRod(x, n))
     return controlRods
 
 def modderatorInit():
     moderators = pygame.sprite.Group()
     for i in range(MODERATOR_NUMBER): 
         x = 360 + i * (10 * ATOM_RADIUS + 5 * ATOM_DIST) 
-        moderators.add(Moderator(x, ROD_WIDTH, SCREEN_HEIGHT))
+        moderators.add(Moderator(x, ROD_WIDTH))
     return moderators
 
 def atomWaterInit(ATOM_GRID_SIZE):
@@ -63,9 +63,9 @@ def neutronUpdate():
 def controlRodUpdate():
     for controlRod in controlRods:
         if len(neutrons) < (DESIRED_NEUTRONS + NEUTRON_TH):
-            controlRod.move(True)
+            controlRod.move(1)
         elif len(neutrons) > (DESIRED_NEUTRONS + NEUTRON_TH):
-            controlRod.move(False)
+            controlRod.move(-1)
         screen.blit(controlRod.image, controlRod.rect)
     return        
 
@@ -119,6 +119,14 @@ def rodNeutronCollisions():
         if collided_rods:
             neutron.kill()
 
+def moderatorNeutronCollisions():
+    for neutron in neutrons:
+        collided_moderators = pygame.sprite.spritecollide(neutron, moderators, False)
+        if collided_moderators and neutron.thermal == 0:
+            neutron.thermal = 1
+            neutron.angle = 180 - neutron.angle
+            neutron.draw()
+
 def createNeutrons(x,y,n, thermal):
     for _ in range(n):
         neutrons.add(Neutron(x, y, NEUTRON_RADIUS, random.uniform(0,360), NEUTRON_VELOCITY, thermal))
@@ -140,16 +148,17 @@ def main():
         screen.fill(BACKGROUND_COLOR)
         
 
-
+        
         waterUpdate()
+        moderatorUpdate()
         atomUpdate()
         neutronUpdate()
         controlRodUpdate()
-        moderatorUpdate()
+        
         atomNeutronCollisions()
         waterNeutronCollisions()
         rodNeutronCollisions()
-
+        moderatorNeutronCollisions()
 
 
         current_fps = int(clock.get_fps())
