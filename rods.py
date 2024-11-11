@@ -7,26 +7,24 @@ class ControlRod(pygame.sprite.Sprite):
         super().__init__()
         self.n = n
         self.x = x
+        self.distance = 0
         self.image = pygame.Surface((ROD_WIDTH, SCREEN_HEIGHT))
         self.image.fill(ROD_COLOR)
 
         if self.n % 2:
-            self.y = ROD_TOP + 2 * ROD_VELOCITY
+            self.y = ROD_TOP
         else:
-            self.y = -ROD_BOT - 2 * ROD_VELOCITY
+            self.y = -ROD_BOT
         self.rect = self.image.get_rect(topleft=(self.x, self.y))
         return
     
     def move(self, remove):
+        if (self.distance + remove * ROD_VELOCITY) >= 0 and (self.distance + remove * ROD_VELOCITY) <=  MAX_ROD_DIST:
+            self.distance += remove * ROD_VELOCITY
         if self.n % 2:
-            if self.y <= (SCREEN_HEIGHT-ROD_BOT - ROD_VELOCITY) and self.y >= ROD_TOP:
-                self.y += ROD_VELOCITY * remove
+            self.rect = self.image.get_rect(topleft=(self.x, self.y+self.distance))
         else:
-            if self.y >= -(SCREEN_HEIGHT-ROD_TOP + ROD_VELOCITY) and self.y <= -ROD_BOT:
-                self.y -= ROD_VELOCITY * remove
-
-
-        self.rect = self.image.get_rect(topleft=(self.x, self.y))
+            self.rect = self.image.get_rect(topleft=(self.x, self.y-self.distance))
         return
     
 class Moderator(pygame.sprite.Sprite):

@@ -74,14 +74,14 @@ def moderatorUpdate():
         screen.blit(moderator.image, moderator.rect)
     return
 
-def atomUpdate():
+def atomUpdate(n_uranium):
     for atom in atoms:
 
         if atom.element == False:
             if random.random() < P_DECAY:
                 createNeutrons(atom.x, atom.y, 1, 1)
 
-            if random.random() < P_URANIUM and atom.element == 0:
+            if random.random() < P_URANIUM and atom.element == 0 and n_uranium < MAX_URANIUM:
                 atom.refill()
 
         screen.blit(atom.image, atom.rect.topleft)
@@ -124,17 +124,26 @@ def moderatorNeutronCollisions():
         collided_moderators = pygame.sprite.spritecollide(neutron, moderators, False)
         if collided_moderators and neutron.thermal == 0:
             neutron.thermal = 1
+            neutron.velocity = neutron.velocity // NEUTRON_VELOCITY_NONTHERMAL
             neutron.angle = 180 - neutron.angle
             neutron.draw()
 
 def createNeutrons(x,y,n, thermal):
     for _ in range(n):
-        neutrons.add(Neutron(x, y, NEUTRON_RADIUS, random.uniform(0,360), NEUTRON_VELOCITY, thermal))
+        neutrons.add(Neutron(x, y, random.uniform(0,360), thermal))
 
 atoms, water = atomWaterInit(ATOM_GRID_SIZE)
 neutrons = neutronInit()
 controlRods = controlRodInit()
 moderators = modderatorInit()
+
+def checkAtoms():
+    n_uranium, n_xenon, n_other = 0,0,0
+    for atom in atoms:
+        n_uranium += (atom.element == 1)
+        n_xenon += (atom.element == 2)
+        n_other += (atom.element == 0)
+    return (n_uranium, n_xenon, n_other)
 
 def main():
     running = True
@@ -147,11 +156,11 @@ def main():
         
         screen.fill(BACKGROUND_COLOR)
         
-
+        atom_counts = checkAtoms()
         
         waterUpdate()
         moderatorUpdate()
-        atomUpdate()
+        atomUpdate(atom_counts[0])
         neutronUpdate()
         controlRodUpdate()
         
@@ -160,15 +169,47 @@ def main():
         rodNeutronCollisions()
         moderatorNeutronCollisions()
 
+        
+        
 
         current_fps = int(clock.get_fps())
-        fps_text = font.render(f"FPS: {current_fps}", True, (0, 0, 0))
-        screen.blit(fps_text, (10, 10))
+        print_text = font.render(f"FPS: {current_fps}", True, (0, 0, 0))
+        rect_text = print_text.get_rect(topright=(SCREEN_WIDTH - 10, 20))
+        screen.blit(print_text, rect_text)
 
-        neutrino_count = len(neutrons)
-        count_text = font.render(f"Neutrons: {neutrino_count}", True, (0, 0, 0))
-        text_rect = count_text.get_rect(topright=(SCREEN_WIDTH - 10, 10))
-        screen.blit(count_text, text_rect)
+        neutron_count = len(neutrons)
+        print_text = font.render(f"Neutrons: {neutron_count}", True, (0, 0, 0))
+        rect_text = print_text.get_rect(topright=(SCREEN_WIDTH - 10, 70))
+        screen.blit(print_text, rect_text)
+
+        print_text = font.render(f"Uranium: {atom_counts[0]}", True, (0, 0, 0))
+        rect_text = print_text.get_rect(topright=(SCREEN_WIDTH - 10, 120))
+        screen.blit(print_text, rect_text)
+
+        print_text = font.render(f"Xenon: {atom_counts[1]}", True, (0, 0, 0))
+        rect_text = print_text.get_rect(topright=(SCREEN_WIDTH - 10, 170))
+        screen.blit(print_text, rect_text)
+
+        print_text = font.render(f"Other: {atom_counts[2]}", True, (0, 0, 0))
+        rect_text = print_text.get_rect(topright=(SCREEN_WIDTH - 10, 220))
+        screen.blit(print_text, rect_text)
+
+        for rod in controlRods:
+            rod_percentage = round(100 - (rod.distance * 100 / MAX_ROD_DIST))
+            break
+
+        print_text = font.render(f"Rod%: {rod_percentage}", True, (0, 0, 0))
+        rect_text = print_text.get_rect(topright=(SCREEN_WIDTH - 10, 270))
+        screen.blit(print_text, rect_text)
+
+        total_temp = 0
+        for block in water:
+            total_temp += block.temp
+
+        print_text = font.render(f"Temp: {total_temp}", True, (0, 0, 0))
+        rect_text = print_text.get_rect(topright=(SCREEN_WIDTH - 10, 320))
+        screen.blit(print_text, rect_text)
+        
 
         pygame.display.flip()
         clock.tick(FPS)

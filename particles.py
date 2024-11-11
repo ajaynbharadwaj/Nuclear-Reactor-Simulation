@@ -49,7 +49,8 @@ class Atom(pygame.sprite.Sprite):
             neutron.kill()
             self.draw()
             return True
-        elif self.element == 2 and neutron.source != self.source:
+        #elif self.element == 2 and neutron.source != self.source:
+        elif self.element == 2:
             self.color = (150,150,150)
             self.element = 0
             neutron.kill()
@@ -60,19 +61,19 @@ class Atom(pygame.sprite.Sprite):
 
 class Neutron(pygame.sprite.Sprite):
 
-    def __init__(self, x, y, radius, angle, velocity, thermal):
+    def __init__(self, x, y, angle, thermal):
         super().__init__()
-        self.image = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
+        self.image = pygame.Surface((NEUTRON_RADIUS * 2, NEUTRON_RADIUS * 2), pygame.SRCALPHA)
         self.rect = self.image.get_rect(center=(x, y))
-        self.radius = radius
+        self.radius = NEUTRON_RADIUS
         self.angle = angle
         self.color = NEUTRON_COLOR
         self.source = (x,y)
         self.thermal = thermal
         if self.thermal:
-            self.velocity = velocity
+            self.velocity = NEUTRON_VELOCITY
         else:
-            self.velocity = velocity * NEUTRON_VELOCITY_NONTHERMAL
+            self.velocity = NEUTRON_VELOCITY * NEUTRON_VELOCITY_NONTHERMAL
 
         self.draw()
         return
